@@ -142,11 +142,15 @@ function createApplication (name, dir) {
     version: '0.0.0',
     private: true,
     scripts: {
-      start: 'node ./bin/www'
+      start: 'node ./bin/www',
+      lint: 'eslint src/'
     },
     dependencies: {
       debug: '~2.6.9',
       express: '~4.16.4'
+    },
+    devDependencies: {
+      eslint: '^8.8.0'
     }
   }
 
@@ -181,67 +185,71 @@ function createApplication (name, dir) {
     mkdir(dir, '.')
   }
 
-  mkdir(dir, 'public')
-  mkdir(dir, 'public/javascripts')
-  mkdir(dir, 'public/images')
-  mkdir(dir, 'public/stylesheets')
+  mkdir(dir, 'src')
+  mkdir(dir, 'src/public')
+  mkdir(dir, 'src/public/javascripts')
+  mkdir(dir, 'src/public/images')
+  mkdir(dir, 'src/public/stylesheets')
+
+  // copy json config files for tools such as eslint
+  copyTemplate('json/eslintrc.json', path.join(dir, '.eslintrc.json'))
 
   // copy css templates
   switch (program.css) {
     case 'less':
-      copyTemplateMulti('css', dir + '/public/stylesheets', '*.less')
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.less')
       break
     case 'stylus':
-      copyTemplateMulti('css', dir + '/public/stylesheets', '*.styl')
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.styl')
       break
     case 'compass':
-      copyTemplateMulti('css', dir + '/public/stylesheets', '*.scss')
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.scss')
       break
     case 'sass':
-      copyTemplateMulti('css', dir + '/public/stylesheets', '*.sass')
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.sass')
       break
     default:
-      copyTemplateMulti('css', dir + '/public/stylesheets', '*.css')
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.css')
       break
   }
 
   // copy route templates
-  mkdir(dir, 'routes')
-  copyTemplateMulti('js/routes', dir + '/routes', '*.js')
+  mkdir(dir, 'src/routes')
+  copyTemplateMulti('js/routes', dir + '/src/routes', '*.js')
 
   if (program.view) {
     // Copy view templates
-    mkdir(dir, 'views')
+    mkdir(dir, 'src/views')
     pkg.dependencies['http-errors'] = '~1.6.3'
     switch (program.view) {
       case 'dust':
-        copyTemplateMulti('views', dir + '/views', '*.dust')
+        copyTemplateMulti('views', dir + '/src/views', '*.dust')
         break
       case 'ejs':
-        copyTemplateMulti('views', dir + '/views', '*.ejs')
+        copyTemplateMulti('views', dir + '/src/views', '*.ejs')
         break
       case 'hbs':
-        copyTemplateMulti('views', dir + '/views', '*.hbs')
+        copyTemplateMulti('views', dir + '/src/views', '*.hbs')
         break
       case 'hjs':
-        copyTemplateMulti('views', dir + '/views', '*.hjs')
+        copyTemplateMulti('views', dir + '/src/views', '*.hjs')
         break
       case 'jade':
-        copyTemplateMulti('views', dir + '/views', '*.jade')
+        copyTemplateMulti('views', dir + '/src/views', '*.jade')
         break
       case 'pug':
-        copyTemplateMulti('views', dir + '/views', '*.pug')
+        copyTemplateMulti('views', dir + '/src/views', '*.pug')
         break
       case 'twig':
-        copyTemplateMulti('views', dir + '/views', '*.twig')
+        copyTemplateMulti('views', dir + '/src/views', '*.twig')
         break
       case 'vash':
-        copyTemplateMulti('views', dir + '/views', '*.vash')
+        copyTemplateMulti('views', dir + '/src/views', '*.vash')
         break
     }
   } else {
     // Copy extra public files
-    copyTemplate('js/index.html', path.join(dir, 'public/index.html'))
+    copyTemplate('js/index.html', path.join(dir, '/src/public/index.html'))
   }
 
   // CSS Engine support
@@ -304,7 +312,8 @@ function createApplication (name, dir) {
       break
     case 'pug':
       app.locals.view = { engine: 'pug' }
-      pkg.dependencies.pug = '2.0.0-beta11'
+      // pkg.dependencies.pug = '2.0.0-beta11'
+      pkg.dependencies.pug = '3.0.2'
       break
     case 'twig':
       app.locals.view = { engine: 'twig' }
@@ -330,7 +339,7 @@ function createApplication (name, dir) {
   pkg.dependencies = sortedObject(pkg.dependencies)
 
   // write files
-  write(path.join(dir, 'app.js'), app.render())
+  write(path.join(dir, '/src/app.js'), app.render())
   write(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2) + '\n')
   mkdir(dir, 'bin')
   write(path.join(dir, 'bin/www'), www.render(), MODE_0755)
